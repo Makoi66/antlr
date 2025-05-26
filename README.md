@@ -1,7 +1,118 @@
-# antlr
+# Интерпретатор MyLang (с использованием ANTLR4 и C++)
 
-generated: java -jar antlr-4.13.2-complete.jar -no-listener -visitor -Dlanguage=Cpp myGrammar.g4 -o generated
+Этот проект представляет собой реализацию простого интерпретатора для кастомного языка программирования "MyLang", использующего ANTLR4 для синтаксического анализа и C++ для выполнения кода.
 
-cmake: cmake .. -DCMAKE_TOOLCHAIN_FILE="D:/Projects_C++/antlr/vcpkg/scripts/buildsystems/vcpkg.cmake" -A x64
+## Возможности языка
 
-using: cd D:\Projects_C++\antlr\build\Debug\MyLangInterpreter.exe test.mylang
+-   Базовые арифметические операции (+, -, *, /)
+-   Объявление переменных (`let`) и присваивание (`=`)
+-   Конкатенация строк
+-   Условные операторы (`if-else`)
+-   Циклы (`while`)
+-   Объявление функций (`func`) и вызовы функций
+-   Оператор возврата значения (`return`)
+-   Оператор вывода на консоль (`print`)
+-   Булевы литералы (`true`, `false`) и `null`
+-   Операторы сравнения (==, !=, <, <=, >, >=) и логические (&&, ||, !) операторы
+-   Однострочные (`//`) и многострочные (`/* ... */`) комментарии
+
+## Предварительные требования
+
+Перед началом убедитесь, что у вас установлено следующее:
+
+1.  **Java Development Kit (JDK):** Необходим для запуска инструмента ANTLR.
+2.  **Компилятор C++:** (например, MSVC, GCC, Clang)
+3.  **CMake (версия 3.12 или выше):** Для управления процессом сборки.
+4.  **ANTLR 4 Tool JAR:** Скачайте `antlr-4.13.2-complete.jar` (или последнюю версию) с официального сайта ANTLR (https://www.antlr.org/download.html). Поместите этот файл в корневую директорию проекта.
+5.  **Vcpkg:** Менеджер пакетов C++.
+    *   Установите vcpkg: `git clone https://github.com/microsoft/vcpkg.git`
+    *   Перейдите в директорию vcpkg: `cd vcpkg`
+    *   Запустите загрузчик vcpkg: `./bootstrap-vcpkg.bat` (для Windows) или `./bootstrap-vcpkg.sh` (для Linux/macOS)
+    *   **Критически важно, интегрируйте vcpkg с вашей системой сборки:** `./vcpkg.exe integrate install` (из корневой папки vcpkg, в "Developer Command Prompt" для VS).
+    *   **Установите ANTLR4 C++ Runtime через vcpkg:**
+        (Из корневой папки vcpkg, в "Developer Command Prompt")
+        `./vcpkg.exe install antlr4 --triplet x64-windows --recurse`
+        (Замените `x64-windows` на ваш целевой триплет, если он отличается, например, `x64-linux`).
+
+## Структура проекта
+
+```
+корневая_папка_проекта/
+├── myGrammar.g4            # Определение грамматики ANTLR
+├── MyInterpreterVisitor.h  # Пользовательская логика интерпретатора
+├── main.cpp                # Точка входа в основное приложение
+├── CMakeLists.txt          # Конфигурация сборки CMake
+├── antlr-4.13.2-complete.jar # JAR-файл инструмента ANTLR
+├── test.mylang             # Пример скрипта, написанного на MyLang
+└── generated/              # (Автоматически сгенерировано) Файлы ANTLR C++
+└── build/                  # (Автоматически сгенерировано) Директория сборки CMake
+```
+
+## Инструкции по сборке
+
+Выполните следующие шаги из **"Developer Command Prompt для VS 2022"** (Windows) или стандартного терминала (Linux/macOS):
+
+1.  **Перейдите в корневую директорию вашего проекта:**
+    ```bash
+    cd D:\Projects_C++\antlr 
+    ```
+    (При необходимости скорректируйте путь)
+
+2.  **Очистите предыдущие сборки и сгенерированные файлы:**
+    ```bash
+    rmdir /s /q generated  # Для командной строки Windows (cmd)
+    rmdir /s /q build      # Для командной строки Windows (cmd)
+    # Используйте 'rm -rf generated' и 'rm -rf build' для Git Bash/WSL/Linux/macOS
+    ```
+
+3.  **Сгенерируйте файлы C++ парсера и визитора ANTLR:**
+    Эта команда читает `myGrammar.g4` и создает необходимые файлы C++ в директории `generated/`.
+    ```bash
+    java -jar antlr-4.13.2-complete.jar -no-listener -visitor -Dlanguage=Cpp myGrammar.g4 -o generated
+    ```
+
+4.  **Сконфигурируйте проект CMake:**
+    Этот шаг настраивает среду сборки. Вы **обязательно** должны указать `CMAKE_TOOLCHAIN_FILE`, указывающий на вашу установку vcpkg.
+    ```bash
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_TOOLCHAIN_FILE="D:/Projects_C++/antlr/vcpkg/scripts/buildsystems/vcpkg.cmake" -A x64
+    ```
+    (При необходимости скорректируйте путь `CMAKE_TOOLCHAIN_FILE` и `-A x64` для вашей системы)
+
+5.  **Соберите проект:**
+    ```bash
+    cmake --build .
+    ```
+    Это скомпилирует ваш код C++ и свяжет его с рантайм-библиотекой ANTLR4.
+
+## Использование
+
+После успешной сборки вы можете запустить интерпретатор двумя способами:
+
+1.  **Запуск напрямую с кодом в качестве аргумента:**
+    ```bash
+    cd D:\Projects_C++\antlr
+    .\build\Debug\MyLangInterpreter.exe "let x = 10; print x * 2;"
+    ```
+    (Скорректируйте путь `.\build\Debug\` если ваша конфигурация сборки отличается, например, `Release`.)
+
+2.  **Запуск скрипта из файла:**
+    Создайте файл (например, `test.mylang`) с вашим кодом MyLang в корне проекта.
+    ```bash
+    cd D:\Projects_C++\antlr
+    .\build\Debug\MyLangInterpreter.exe test.mylang
+    ```
+    (В качестве альтернативы, вы можете использовать `.\build\Debug\MyLangInterpreter.exe -f test.mylang`, если ваша логика `main.cpp` это поддерживает.)
+
+## Устранение неполадок
+
+Если вы столкнетесь с ошибками в процессе сборки, убедитесь, что:
+*   Все пути к файлам в `CMakeLists.txt` верны и используют прямые слеши (`/`).
+*   ANTLR `.jar` файл находится в корне проекта.
+*   Vcpkg установлен и интегрирован корректно для вашего целевого триплета.
+*   Вы выполняете команды из правильной директории (корневой папки проекта или `build`, как указано).
+*   Ваши файлы `myGrammar.g4` и `MyInterpreterVisitor.h` идентичны последним предоставленным версиям, особенно в отношении меток элементов и доступа к методам.
+
+Если проблемы сохраняются, попробуйте выполнить полную очистку (шаг 2) и повторно запустить весь процесс сборки.
+```
