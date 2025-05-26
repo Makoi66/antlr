@@ -49,15 +49,15 @@ NOT: '!'  | 'not' ;
 
 prog: (statement SEMICOLON)* EOF ;
 
-statement: declaration_stmt
-    | assignment_stmt
-    | print_stmt
-    | if_stmt
-    | while_stmt
-    | block_stmt
-    | func_decl_stmt
-    | return_stmt
-    | expr
+statement: declaration_stmt     # DeclarationStmt
+    | assignment_stmt           # AssignmentStmt
+    | print_stmt                # PrintStmt
+    | if_stmt                   # IfStmt
+    | while_stmt                # WhileStmt
+    | block_stmt                # BlockStmt
+    | func_decl_stmt            # FuncDeclStmt
+    | return_stmt               # ReturnStmt
+    | expr                      # ExprStmt
     ;
 
 block_stmt: LBRACE (statement SEMICOLON)* RBRACE ;
@@ -76,19 +76,19 @@ func_decl_stmt: KW_FUNC name=ID LPAREN (params+=ID (COMMA params+=ID)*)? RPAREN 
 
 return_stmt: KW_RETURN value=expr? ;
 
-expr : expr op=OR expr
-     | expr op=AND expr
-     | NOT expr
-     | expr op=(EQ | NEQ) expr
-     | expr op=(LT | LE | GT | GE) expr
-     | expr op=(ADD | SUB) expr
-     | expr op=(MUL | DIV) expr
-     | name=ID LPAREN (args+=expr (COMMA args+=expr)*)? RPAREN
-     | name=ID
-     | NUMBER
-     | STRING
-     | KW_TRUE
-     | KW_FALSE
-     | KW_NULL
-     | LPAREN expr RPAREN
+expr : expr op=OR expr                 # LogicalOr
+     | expr op=AND expr                # LogicalAnd
+     | NOT expr                        # NotExpr
+     | expr op=(EQ | NEQ) expr         # Equality
+     | expr op=(LT | LE | GT | GE) expr # Relational
+     | expr op=(ADD | SUB) expr        # AddSub
+     | expr op=(MUL | DIV) expr        # MulDiv
+     | name=ID LPAREN (args+=expr (COMMA args+=expr)*)? RPAREN # FuncCall
+     | name=ID                         # Id
+     | NUMBER                              # Number
+     | STRING                              # String
+     | KW_TRUE                             # True
+     | KW_FALSE                            # False
+     | KW_NULL                             # Null
+     | LPAREN expr RPAREN                  # Parens
      ;

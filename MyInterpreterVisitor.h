@@ -5,8 +5,8 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
-#include <any>
-#include "generated/myGrammarBaseVisitor.h"
+#include <any>     
+#include "generated/myGrammarBaseVisitor.h"     
 
 struct FunctionDefinition {
     std::string name;
@@ -89,16 +89,18 @@ public:
         return std::any();
     }
 
-    virtual std::any visitDeclaration_stmt(myGrammarParser::Declaration_stmtContext* ctx) override {
-        std::string varName = ctx->name->getText();
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->declaration_stmt()->...) ---
+    virtual std::any visitDeclarationStmt(myGrammarParser::DeclarationStmtContext* ctx) override {
+        myGrammarParser::Declaration_stmtContext* declCtx = ctx->declaration_stmt(); // Получаем вложенный контекст
+        std::string varName = declCtx->name->getText();
 
         if (scopes.back().count(varName)) {
             throw std::runtime_error("Variable '" + varName + "' already declared in this scope.");
         }
 
         std::any value;
-        if (ctx->value != nullptr) {
-            value = visit(ctx->value);
+        if (declCtx->value != nullptr) {
+            value = visit(declCtx->value);
         }
         else {
             value = nullptr;
@@ -107,16 +109,20 @@ public:
         return std::any();
     }
 
-    virtual std::any visitAssignment_stmt(myGrammarParser::Assignment_stmtContext* ctx) override {
-        std::string varName = ctx->name->getText();
-        std::any value = visit(ctx->value);
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->assignment_stmt()->...) ---
+    virtual std::any visitAssignmentStmt(myGrammarParser::AssignmentStmtContext* ctx) override {
+        myGrammarParser::Assignment_stmtContext* assignCtx = ctx->assignment_stmt(); // Получаем вложенный контекст
+        std::string varName = assignCtx->name->getText();
+        std::any value = visit(assignCtx->value);
 
         setVariable(varName, value);
         return std::any();
     }
 
-    virtual std::any visitPrint_stmt(myGrammarParser::Print_stmtContext* ctx) override {
-        std::any val = visit(ctx->value);
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->print_stmt()->...) ---
+    virtual std::any visitPrintStmt(myGrammarParser::PrintStmtContext* ctx) override {
+        myGrammarParser::Print_stmtContext* printCtx = ctx->print_stmt(); // Получаем вложенный контекст
+        std::any val = visit(printCtx->value);
         if (val.type() == typeid(int)) {
             std::cout << std::any_cast<int>(val) << std::endl;
         }
@@ -135,36 +141,44 @@ public:
         return std::any();
     }
 
-    virtual std::any visitIf_stmt(myGrammarParser::If_stmtContext* ctx) override {
-        std::any conditionResult = visit(ctx->condition);
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->if_stmt()->...) ---
+    virtual std::any visitIfStmt(myGrammarParser::IfStmtContext* ctx) override {
+        myGrammarParser::If_stmtContext* ifCtx = ctx->if_stmt(); // Получаем вложенный контекст
+        std::any conditionResult = visit(ifCtx->condition);
         bool condition = evaluateCondition(conditionResult);
 
         if (condition) {
-            visit(ctx->thenBlock);
+            visit(ifCtx->thenBlock);
         }
-        else if (ctx->KW_ELSE() != nullptr) {
-            visit(ctx->elseBlock);
+        // KW_ELSE() является членом If_stmtContext, но мы получаем его через ifCtx.
+        // Или ctx->if_stmt()->KW_ELSE()
+        else if (ifCtx->KW_ELSE() != nullptr) {
+            visit(ifCtx->elseBlock);
         }
         return std::any();
     }
 
-    virtual std::any visitWhile_stmt(myGrammarParser::While_stmtContext* ctx) override {
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->while_stmt()->...) ---
+    virtual std::any visitWhileStmt(myGrammarParser::WhileStmtContext* ctx) override {
+        myGrammarParser::While_stmtContext* whileCtx = ctx->while_stmt(); // Получаем вложенный контекст
         while (true) {
-            std::any conditionResult = visit(ctx->condition);
+            std::any conditionResult = visit(whileCtx->condition);
             bool condition = evaluateCondition(conditionResult);
             if (!condition) {
                 break;
             }
-            visit(ctx->body);
+            visit(whileCtx->body);
         }
         return std::any();
     }
 
-    virtual std::any visitBlock_stmt(myGrammarParser::Block_stmtContext* ctx) override {
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->block_stmt()->...) ---
+    virtual std::any visitBlockStmt(myGrammarParser::BlockStmtContext* ctx) override {
+        myGrammarParser::Block_stmtContext* blockCtx = ctx->block_stmt(); // Получаем вложенный контекст
         pushScope();
         std::any result;
         try {
-            for (auto stmt_ctx : ctx->statement()) {
+            for (auto stmt_ctx : blockCtx->statement()) { // statement() - это часть Block_stmtContext
                 visit(stmt_ctx);
             }
         }
@@ -177,22 +191,26 @@ public:
         return result;
     }
 
-    virtual std::any visitFunc_decl_stmt(myGrammarParser::Func_decl_stmtContext* ctx) override {
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->func_decl_stmt()->...) ---
+    virtual std::any visitFuncDeclStmt(myGrammarParser::FuncDeclStmtContext* ctx) override {
+        myGrammarParser::Func_decl_stmtContext* funcDeclCtx = ctx->func_decl_stmt(); // Получаем вложенный контекст
         FunctionDefinition func;
-        func.name = ctx->name->getText();
-        func.body = ctx->body;
+        func.name = funcDeclCtx->name->getText();
+        func.body = funcDeclCtx->body;
 
-        for (auto param_node : ctx->params) {
+        for (auto param_node : funcDeclCtx->params) {
             func.params.push_back(param_node->getText());
         }
         functions[func.name] = func;
         return std::any();
     }
 
-    virtual std::any visitReturn_stmt(myGrammarParser::Return_stmtContext* ctx) override {
+    // --- ИСПРАВЛЕНО: Доступ через вложенный контекст (ctx->return_stmt()->...) ---
+    virtual std::any visitReturnStmt(myGrammarParser::ReturnStmtContext* ctx) override {
+        myGrammarParser::Return_stmtContext* returnCtx = ctx->return_stmt(); // Получаем вложенный контекст
         std::any value;
-        if (ctx->value != nullptr) {
-            value = visit(ctx->value);
+        if (returnCtx->value != nullptr) {
+            value = visit(returnCtx->value);
         }
         else {
             value = nullptr;
@@ -200,8 +218,14 @@ public:
         throw ReturnException(value);
     }
 
+    // --- Для ExprStmtContext, IdContext, FuncCallContext, NotExprContext ---
+    // Эти контексты напрямую содержат нужные члены, так как они не являются
+    // контекстами-обертками для правил из 'statement'.
+    // Они либо являются корневыми контекстами для альтернатив expr (например, IdContext),
+    // либо напрямую содержат expr (например, ExprStmtContext, NotExprContext, ParensContext).
+
     virtual std::any visitExprStmt(myGrammarParser::ExprStmtContext* ctx) override {
-        visit(ctx->expr());
+        visit(ctx->expr()); // ctx->expr() возвращает ExprContext*, это уже прямое правило
         return std::any();
     }
 
