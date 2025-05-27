@@ -1,0 +1,80 @@
+let message = "Welcome to my custom language!";
+print message;
+
+let num = 10;
+print num;
+
+let another_num;
+print another_num;
+
+another_num = num * 2;
+print another_num;
+
+let a = 15;
+let b = 4;
+print a + b;
+print a - b;
+print a * b;
+print a / b;
+
+let str1 = "Hello, ";
+let str2 = "World!";
+print str1 + str2;
+
+let temperature = 25;
+if (temperature > 30) {
+    print "It's hot!";
+} else if (temperature < 10) {
+    print "It's cold!";
+} else {
+    print "Temperature is mild.";
+}
+
+let is_raining = false;
+if (is_raining) {
+    print "Bring an umbrella.";
+} else {
+    print "Enjoy the sunshine!";
+}
+
+let counter = 0;
+while (counter < 3) {
+    print "Loop iteration: " + counter;
+    counter = counter + 1;
+}
+
+func greet(name) {
+    print "Hi, " + name + "!";
+}
+
+greet("Alice");
+
+func add(num1, num2) {
+    return num1 + num2;
+}
+
+let sum = add(5, 7);
+print "Sum: " + sum;
+
+func factorial(n) {
+    if (n == 0) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+print "Factorial of 4: " + factorial(4);
+
+func doNothing() {
+    let x = 100;
+}
+print doNothing();
+
+let val_x = 10;
+let val_y = 20;
+print val_x < val_y and val_y == 20;
+print val_x > val_y or not true;
+
+let my_null_var = null;
+print my_null_var == null;
+
+print "Script execution complete.";
